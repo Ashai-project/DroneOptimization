@@ -18,7 +18,11 @@ DroneUtil::DroneUtil(int vertexCountA, int vertexCountB, float radius)
 
 // モデルの初期化
 void DroneUtil::initializeModels() {
-    srand(100);  // ランダムシードの初期化
+    initializeModels(100);
+}
+
+double DroneUtil::initializeModels(int seed) {
+    srand(seed);  // ランダムシードの初期化
 
     // モデルAの頂点を生成
     for (int i = 0; i < vertexCountA; ++i) {
@@ -41,14 +45,16 @@ void DroneUtil::initializeModels() {
     }
 
     droneCount = std::max(modelA.size(), modelB.size());
-    optimizeVertexMapping();
+
+    double  elapsedMillTime = optimizeVertexMapping();
 
     float totalDistance = evaluateMapping();
     std::cout << "総移動距離: " << totalDistance << std::endl;
+    return elapsedMillTime;
 }
 
 // 頂点の対応付けを最適化
-void DroneUtil::optimizeVertexMapping() {
+double DroneUtil::optimizeVertexMapping() {
     HungarianAlgorithm hungarianAlgorithmInstance;
     vertexMapping.resize(droneCount);
     int newSize = std::max(vertexCountA, vertexCountB);
@@ -68,6 +74,8 @@ void DroneUtil::optimizeVertexMapping() {
     cudaMalloc((void**)&d_minRow, newSize * sizeof(float));
     cudaMalloc((void**)&d_minCol, newSize * sizeof(float));
 
+    auto start = std::chrono::high_resolution_clock::now();
+
     cudaMemcpy(d_matrix, costMatrix.data(), newSize * newSize * sizeof(float), cudaMemcpyHostToDevice);
     hungarianAlgorithmInstance.runHungarianAlgorithm(d_matrix, d_minRow, d_minCol, newSize);
     cudaMemcpy(costMatrix.data(), d_matrix, newSize * newSize * sizeof(float), cudaMemcpyDeviceToHost);
@@ -82,10 +90,16 @@ void DroneUtil::optimizeVertexMapping() {
     for (int i = vertexCountA; i < droneCount; ++i) {
         vertexMapping[i] = i % vertexCountB;
     }
+    auto end = std::chrono::high_resolution_clock::now();
+
+    // 経過時間の計算（ミリ秒単位）
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    double  elapsedMillTime = elapsed.count();
 
     cudaFree(d_matrix);
     cudaFree(d_minRow);
     cudaFree(d_minCol);
+    return elapsedMillTime;
 }
 
 // 対応付けを評価

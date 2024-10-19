@@ -97,10 +97,8 @@ __global__ void addMinToCols(float *matrix, int *colCovered, float minVal, int r
 
 // カバーを更新する補正操作
 void HungarianAlgorithm::updateMatrixForUncovered(float *matrix, int *rowCovered, int *colCovered, int rows, int cols) {
-    float *d_minVal;
     float h_minVal = FLT_MAX;  // ホスト側で FLT_MAX を設定
 
-    cudaMalloc(&d_minVal, sizeof(float));
     // `cudaMemcpy` を使って FLT_MAX をデバイスメモリにコピー
     cudaMemcpy(d_minVal, &h_minVal, sizeof(float), cudaMemcpyHostToDevice);
 
@@ -117,9 +115,6 @@ void HungarianAlgorithm::updateMatrixForUncovered(float *matrix, int *rowCovered
     // カバーされている列に最小値を加える
     addMinToCols<<<cols, 1>>>(matrix, colCovered, minVal, rows, cols);
     cudaDeviceSynchronize();
-
-    // メモリの解放
-    cudaFree(d_minVal);
 }
 
 

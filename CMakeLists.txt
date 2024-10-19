@@ -58,11 +58,16 @@ file(GLOB TEST_SOURCES ${PROJECT_SOURCE_DIR}/test/*.cpp)
 
 if(TEST_SOURCES)
     enable_testing()
-    add_executable(DroneOptimizationTests ${TEST_SOURCES})
-    target_link_libraries(DroneOptimizationTests ${OPENGL_LIBRARIES} ${GLUT_glut_LIBRARY} cudaUtil)
 
-    # テストを登録
-    add_test(NAME DroneOptimizationTests COMMAND DroneOptimizationTests)
+    foreach(TEST_SOURCE ${TEST_SOURCES})
+        get_filename_component(TEST_EXECUTABLE_NAME ${TEST_SOURCE} NAME_WE)
+        add_executable(${TEST_EXECUTABLE_NAME} ${TEST_SOURCE})
+        target_link_libraries(${TEST_EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_glut_LIBRARY} cudaUtil)
+
+        # 各テストを登録
+        add_test(NAME ${TEST_EXECUTABLE_NAME} COMMAND ${TEST_EXECUTABLE_NAME})
+    endforeach()
+
 else()
     message(STATUS "No test files found. Skipping test build.")
 endif()

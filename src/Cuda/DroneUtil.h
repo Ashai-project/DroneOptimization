@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cmath>
+#include <chrono> 
 #include <algorithm>
 #include <cuda_runtime.h>
 #include "hungarian_algorithm.h"
@@ -24,9 +25,10 @@ public:
     
     // モデルの初期化
     void initializeModels();
+    double initializeModels(int seed);
 
     // 頂点の対応付けを最適化
-    void optimizeVertexMapping();
+    double optimizeVertexMapping();
 
     // 対応付けを評価
     float evaluateMapping();
