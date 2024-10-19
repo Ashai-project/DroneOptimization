@@ -50,9 +50,10 @@ float evaluateMapping();
 // モデルの初期化
 void initializeModels() {
     // モデルAとモデルBの頂点をここでロードまたは生成する
-    int vertexCountA = 100; // モデルAの頂点数
-    int vertexCountB = 100; // モデルBの頂点数
-    srand(static_cast<unsigned int>(time(0))); // ランダムシードの初期化
+    int vertexCountA = 300; // モデルAの頂点数
+    int vertexCountB = 300; // モデルBの頂点数
+    // srand(static_cast<unsigned int>(time(0))); // ランダムシードの初期化
+    srand(100); // ランダムシードの初期化
     // モデルAの頂点を生成
     float radius = 5.0f; // 球面の半径
     for (int i = 0; i < vertexCountA; ++i) {
