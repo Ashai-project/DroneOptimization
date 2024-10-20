@@ -45,11 +45,14 @@ set_target_properties(cudaUtil PROPERTIES
     CUDA_ARCHITECTURES 52)
 target_compile_options(cudaUtil PRIVATE -fopenmp)
 
+# Utilディレクトリ内のソースコードを追加
+aux_source_directory(${PROJECT_SOURCE_DIR}/src/Util Util_SOURCES)
+
 # src/Main/ の中の各 .cpp ファイルごとに実行ファイルを作成
 file(GLOB MAIN_SOURCES ${PROJECT_SOURCE_DIR}/src/Main/*.cpp)
 foreach(MAIN_SOURCE ${MAIN_SOURCES})
     get_filename_component(EXECUTABLE_NAME ${MAIN_SOURCE} NAME_WE)
-    add_executable(${EXECUTABLE_NAME} ${MAIN_SOURCE})
+    add_executable(${EXECUTABLE_NAME} ${MAIN_SOURCE} ${Util_SOURCES})
     target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_glut_LIBRARY} cudaUtil)
 endforeach()
 
@@ -61,7 +64,7 @@ if(TEST_SOURCES)
 
     foreach(TEST_SOURCE ${TEST_SOURCES})
         get_filename_component(TEST_EXECUTABLE_NAME ${TEST_SOURCE} NAME_WE)
-        add_executable(${TEST_EXECUTABLE_NAME} ${TEST_SOURCE})
+        add_executable(${TEST_EXECUTABLE_NAME} ${TEST_SOURCE} ${Util_SOURCES})
         target_link_libraries(${TEST_EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_glut_LIBRARY} cudaUtil)
 
         # 各テストを登録

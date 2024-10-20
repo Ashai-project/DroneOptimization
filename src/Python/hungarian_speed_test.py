@@ -3,7 +3,7 @@ from scipy.optimize import linear_sum_assignment
 import time
 
 # N要素のランダムなコスト行列を生成する
-N = 2500  # 要素の数（必要に応じて変更）
+N = 2000  # 要素の数（必要に応じて変更）
 cost_matrix = np.random.rand(N, N)
 
 # ハンガリアンアルゴリズムで解く

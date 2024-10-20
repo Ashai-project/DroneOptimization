@@ -5,7 +5,7 @@
 
 // テストの回数と固定シードのリスト
 const int testCount = 1;  // テスト回数
-const int N = 2000; //要素数
+const int N = 200; //要素数
 
 
 // 最適解の計算時間を求める関数
@@ -20,7 +20,7 @@ void calculateAverageTime() {
         int currentSeed = seedList[i];  // テストごとのシードを取得
 
         // DroneUtil クラスのインスタンスを作成 (モデルAとモデルBの頂点数は 700 と仮定)
-        DroneUtil droneUtil(N, N, 5.0f, DroneUtil::AlgorithmType::HUNGARIAN);
+        DroneUtil droneUtil(N, N, 5.0f, DroneUtil::AlgorithmType::GA);
 
         // モデルの初期化と頂点対応付けの最適化
         double elapsed = droneUtil.initializeModels(currentSeed);

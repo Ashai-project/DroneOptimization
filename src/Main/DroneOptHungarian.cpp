@@ -5,7 +5,7 @@
 int windowWidth = 1600;
 int windowHeight = 1200;
 float pointSize = 5.0f;
-int vertexCountA = 700, vertexCountB = 700;
+int vertexCountA = 1800, vertexCountB = 1800;
 int currentFrame = 0;
 int totalFrames = 100; // アニメーションフレーム数
 int modelAFrames = 30; // モデルA表示フレーム数

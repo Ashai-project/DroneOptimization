@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cuda_runtime.h>
 #include "hungarian_algorithm.h"
+#include "../Util/hungarian_algorithm_cpu.h"
+#include "../Util/GeneticAlgorithm.h"
 
 struct Vec3 {
     float x, y, z;
@@ -21,7 +23,8 @@ struct Vec3 {
 
 class DroneUtil {
 public:
-    DroneUtil(int vertexCountA, int vertexCountB, float radius);
+    enum class AlgorithmType { HUNGARIAN, GA, HUNGARIAN_CPU };
+    DroneUtil(int vertexCountA, int vertexCountB, float radius, AlgorithmType algorithmType = AlgorithmType::HUNGARIAN);
     
     // モデルの初期化
     void initializeModels();
@@ -41,6 +44,7 @@ public:
     const std::vector<int>& getVertexMapping() const;
 
 private:
+    AlgorithmType algorithmType;
     std::vector<Vec3> modelA, modelB;  // モデルの頂点リスト
     std::vector<int> vertexMapping;    // 頂点対応付け結果
     int droneCount;                    // ドローン数（頂点数）

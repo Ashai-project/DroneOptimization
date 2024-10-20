@@ -19,8 +19,8 @@ void calculateAverageTime() {
     for (int i = 0; i < testCount; ++i) {
         int currentSeed = seedList[i];  // テストごとのシードを取得
 
-        // DroneUtil クラスのインスタンスを作成 (モデルAとモデルBの頂点数は 700 と仮定)
-        DroneUtil droneUtil(N, N, 5.0f, DroneUtil::AlgorithmType::HUNGARIAN);
+        // DroneUtil クラスのインスタンスを作成 
+        DroneUtil droneUtil(N, N, 5.0f, DroneUtil::AlgorithmType::HUNGARIAN_CPU);
 
         // モデルの初期化と頂点対応付けの最適化
         double elapsed = droneUtil.initializeModels(currentSeed);

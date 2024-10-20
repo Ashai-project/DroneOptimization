@@ -50,8 +50,8 @@ float evaluateMapping();
 // モデルの初期化
 void initializeModels() {
     // モデルAとモデルBの頂点をここでロードまたは生成する
-    int vertexCountA = 300; // モデルAの頂点数
-    int vertexCountB = 300; // モデルBの頂点数
+    int vertexCountA = 1800; // モデルAの頂点数
+    int vertexCountB = 1800; // モデルBの頂点数
     // srand(static_cast<unsigned int>(time(0))); // ランダムシードの初期化
     srand(100); // ランダムシードの初期化
     // モデルAの頂点を生成

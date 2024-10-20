@@ -13,8 +13,8 @@ Vec3 Vec3::interpolate(const Vec3& target, float t) const {
 }
 
 // コンストラクタ
-DroneUtil::DroneUtil(int vertexCountA, int vertexCountB, float radius)
-    : vertexCountA(vertexCountA), vertexCountB(vertexCountB), radius(radius), droneCount(0) {}
+DroneUtil::DroneUtil(int vertexCountA, int vertexCountB, float radius, AlgorithmType algorithmType)
+    : vertexCountA(vertexCountA), vertexCountB(vertexCountB), radius(radius), algorithmType(algorithmType), droneCount(0) {}
 
 // モデルの初期化
 void DroneUtil::initializeModels() {
@@ -46,7 +46,7 @@ double DroneUtil::initializeModels(int seed) {
 
     droneCount = std::max(modelA.size(), modelB.size());
 
-    double  elapsedMillTime = optimizeVertexMapping();
+    double elapsedMillTime = optimizeVertexMapping();
 
     float totalDistance = evaluateMapping();
     std::cout << "総移動距離: " << totalDistance << std::endl;
@@ -55,51 +55,78 @@ double DroneUtil::initializeModels(int seed) {
 
 // 頂点の対応付けを最適化
 double DroneUtil::optimizeVertexMapping() {
-    HungarianAlgorithm hungarianAlgorithmInstance;
-    vertexMapping.resize(droneCount);
     int newSize = std::max(vertexCountA, vertexCountB);
-
+    vertexMapping.resize(droneCount);
     std::vector<float> costMatrix(newSize * newSize, FLT_MAX);
 
+    // コスト行列の作成
     for (int i = 0; i < vertexCountA; ++i) {
         for (int j = 0; j < vertexCountB; ++j) {
             costMatrix[i * newSize + j] = modelA[i].distance(modelB[j]);
         }
     }
 
-    hungarianAlgorithmInstance.addDummyElements(costMatrix.data(), vertexCountA, vertexCountB, newSize);
-
-    float *d_matrix, *d_minRow, *d_minCol;
-    cudaMalloc((void**)&d_matrix, newSize * newSize * sizeof(float));
-    cudaMalloc((void**)&d_minRow, newSize * sizeof(float));
-    cudaMalloc((void**)&d_minCol, newSize * sizeof(float));
-
+    // アルゴリズムの選択に応じて処理を切り替える
     auto start = std::chrono::high_resolution_clock::now();
+    
+    if (algorithmType == AlgorithmType::HUNGARIAN) {
+        HungarianAlgorithm hungarianAlgorithmInstance;
 
-    cudaMemcpy(d_matrix, costMatrix.data(), newSize * newSize * sizeof(float), cudaMemcpyHostToDevice);
-    hungarianAlgorithmInstance.runHungarianAlgorithm(d_matrix, d_minRow, d_minCol, newSize);
-    cudaMemcpy(costMatrix.data(), d_matrix, newSize * newSize * sizeof(float), cudaMemcpyDeviceToHost);
+        // ダミー要素を追加
+        hungarianAlgorithmInstance.addDummyElements(costMatrix.data(), vertexCountA, vertexCountB, newSize);
 
-    std::vector<int> assignments;
-    hungarianAlgorithmInstance.findOptimalAssignment(costMatrix.data(), newSize, newSize, assignments);
+        std::vector<std::vector<float>> costMatrix2D(newSize, std::vector<float>(newSize, FLT_MAX));
+        for (int i = 0; i < vertexCountA; ++i) {
+            for (int j = 0; j < vertexCountB; ++j) {
+                costMatrix2D[i][j] = costMatrix[i * newSize + j];
+            }
+        }
 
-    for (int i = 0; i < vertexCountA; ++i) {
-        vertexMapping[i] = assignments[i];
+        std::vector<int> assignments = hungarianAlgorithmInstance.findOptimalAssignment(costMatrix2D);
+
+        for (int i = 0; i < vertexCountA; ++i) {
+            vertexMapping[i] = assignments[i];
+        }
+
+        for (int i = vertexCountA; i < droneCount; ++i) {
+            vertexMapping[i] = i % vertexCountB;
+        }
+
+    } else if (algorithmType == AlgorithmType::GA) {
+        std::vector<std::vector<float>> costMatrix2D(newSize, std::vector<float>(newSize, FLT_MAX));
+        for (int i = 0; i < vertexCountA; ++i) {
+            for (int j = 0; j < vertexCountB; ++j) {
+                costMatrix2D[i][j] = costMatrix[i * newSize + j];
+            }
+        }
+
+        // 遺伝的アルゴリズムによる最適化
+        GeneticAlgorithm ga(10 * newSize, 500, 0.15, newSize, costMatrix2D);
+        vertexMapping = ga.optimize();
+    } else if (algorithmType == AlgorithmType::HUNGARIAN_CPU) {
+        std::vector<std::vector<float>> costMatrix2D(newSize, std::vector<float>(newSize, FLT_MAX));
+        for (int i = 0; i < vertexCountA; ++i) {
+            for (int j = 0; j < vertexCountB; ++j) {
+                costMatrix2D[i][j] = costMatrix[i * newSize + j];
+            }
+        }
+
+        HungarianAlgorithmCPU hungarianCPUAlgorithmInstance;
+        std::vector<int> assignments = hungarianCPUAlgorithmInstance.findOptimalAssignment(costMatrix2D);
+
+        for (int i = 0; i < vertexCountA; ++i) {
+            vertexMapping[i] = assignments[i];
+        }
+
+        for (int i = vertexCountA; i < droneCount; ++i) {
+            vertexMapping[i] = i % vertexCountB;
+        }
     }
 
-    for (int i = vertexCountA; i < droneCount; ++i) {
-        vertexMapping[i] = i % vertexCountB;
-    }
     auto end = std::chrono::high_resolution_clock::now();
-
-    // 経過時間の計算（ミリ秒単位）
     std::chrono::duration<double, std::milli> elapsed = end - start;
-    double  elapsedMillTime = elapsed.count();
 
-    cudaFree(d_matrix);
-    cudaFree(d_minRow);
-    cudaFree(d_minCol);
-    return elapsedMillTime;
+    return elapsed.count();
 }
 
 // 対応付けを評価
