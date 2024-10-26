@@ -5,7 +5,7 @@
 int windowWidth = 1600;
 int windowHeight = 1200;
 float pointSize = 5.0f;
-int vertexCountA = 1800, vertexCountB = 1800;
+int vertexCountA = 2000, vertexCountB = 2000;
 int currentFrame = 0;
 int totalFrames = 100; // アニメーションフレーム数
 int modelAFrames = 30; // モデルA表示フレーム数
@@ -16,7 +16,7 @@ double fovy = 45.0, near = 0.1, far = 100;
 float cameraPosX = 0.0f, cameraPosY = 0.0f, cameraPosZ = 20.0f;  // カメラ位置
 float cameraLookAtX = 0.0f, cameraLookAtY = 0.0f, cameraLookAtZ = 0.0f;  // 見る方向
 float cameraUpX = 0.0f, cameraUpY = 1.0f, cameraUpZ = 0.0f;  // カメラの上方向
-DroneUtil droneUtil(vertexCountA, vertexCountB, pointSize); 
+DroneUtil droneUtil(vertexCountA, vertexCountB, pointSize, DroneUtil::AlgorithmType::HUNGARIAN_CPU); 
 
 void setProjection() {
     glMatrixMode(GL_PROJECTION);
@@ -46,6 +46,9 @@ void display() {
 
     glBegin(GL_POINTS);
     const auto& vertexMapping = droneUtil.getVertexMapping();
+    bool result = droneUtil.checkForDuplicateMappings();
+    std::cout<<"result "<< result <<std::endl;
+
     for (int i = 0; i < vertexMapping.size(); ++i) {
         Vec3 currentPos = droneUtil.getModelA(i).interpolate(droneUtil.getModelB(vertexMapping[i]), t);
         glVertex3f(currentPos.x, currentPos.y, currentPos.z);

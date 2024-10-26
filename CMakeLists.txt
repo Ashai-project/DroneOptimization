@@ -6,7 +6,7 @@ project(DroneOptimization VERSION 1.0 LANGUAGES CXX CUDA)
 # C++の標準を設定
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -fopenmp")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fpic -fopenmp")
 
 # 実行ファイルの出力先
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
@@ -43,7 +43,7 @@ set_target_properties(cudaUtil PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
     LINKER_LANGUAGE CUDA
     CUDA_ARCHITECTURES 52)
-target_compile_options(cudaUtil PRIVATE -fopenmp)
+target_compile_options(cudaUtil PRIVATE -O3 -fopenmp)
 
 # Utilディレクトリ内のソースコードを追加
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/Util Util_SOURCES)

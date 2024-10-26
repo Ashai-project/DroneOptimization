@@ -5,7 +5,7 @@
 
 // テストの回数と固定シードのリスト
 const int testCount = 1;  // テスト回数
-const int N = 2000; //要素数
+int N ; //要素数
 
 
 // 最適解の計算時間を求める関数
@@ -16,6 +16,11 @@ void calculateAverageTime() {
         seedList[i] = i * 100 + 100;
     }
 
+    // 要素数の入力
+    std::cout << "要素数を整数値で入力してください: ";
+    std::cin >> N;
+    // N=1000;
+
     for (int i = 0; i < testCount; ++i) {
         int currentSeed = seedList[i];  // テストごとのシードを取得
 
@@ -24,6 +29,8 @@ void calculateAverageTime() {
 
         // モデルの初期化と頂点対応付けの最適化
         double elapsed = droneUtil.initializeModels(currentSeed);
+
+        droneUtil.checkForDuplicateMappings();
 
         // 経過時間の計算（ミリ秒単位）
         totalDuration += elapsed;

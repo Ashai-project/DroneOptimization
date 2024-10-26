@@ -11,7 +11,7 @@ int N ; //要素数
 // 最適解の計算時間を求める関数
 void calculateAverageTime() {
     double totalDuration = 0.0;  // 全体の計算時間を保持する変数
-    std::vector<int> seedList(testCount); 
+    std::vector<int> seedList(testCount); // = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
     for (int i = 0; i < testCount; ++i) {
         seedList[i] = i * 100 + 100;
     }
@@ -23,8 +23,8 @@ void calculateAverageTime() {
     for (int i = 0; i < testCount; ++i) {
         int currentSeed = seedList[i];  // テストごとのシードを取得
 
-        // DroneUtil クラスのインスタンスを作成 
-        DroneUtil droneUtil(N, N, 5.0f, DroneUtil::AlgorithmType::GA);
+        // DroneUtil クラスのインスタンスを作成 (モデルAとモデルBの頂点数は 700 と仮定)
+        DroneUtil droneUtil(N, N, 5.0f, DroneUtil::AlgorithmType::HUNGARIAN);
 
         // モデルの初期化と頂点対応付けの最適化
         double elapsed = droneUtil.initializeModels(currentSeed);

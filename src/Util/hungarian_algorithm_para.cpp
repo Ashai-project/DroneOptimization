@@ -1,16 +1,9 @@
-#include "hungarian_algorithm_cpu.h"
-#include <algorithm>
-#include <limits>
-#include <cmath>
-#include <iostream>
-#include <vector>
-#include <set>
+#include "hungarian_algorithm_para.h"
 
-
-HungarianAlgorithmCPU::HungarianAlgorithmCPU() {}
+HungarianAlgorithmPARA::HungarianAlgorithmPARA() {}
 
 // 行列から最適な割り当てを見つける
-std::vector<int> HungarianAlgorithmCPU::findOptimalAssignment(const std::vector<std::vector<float>>& costMatrix) {
+std::vector<int> HungarianAlgorithmPARA::findOptimalAssignment(const std::vector<std::vector<float>>& costMatrix) {
     int rows = costMatrix.size();
     int cols = costMatrix[0].size();
     int dim = std::max(rows, cols);
@@ -18,6 +11,8 @@ std::vector<int> HungarianAlgorithmCPU::findOptimalAssignment(const std::vector<
     // コスト行列の正方行列化（ダミー要素を追加）
     std::vector<std::vector<float>> cost(dim, std::vector<float>(dim, 0.0f));
 
+    // 最上位のforループを並列化
+    #pragma omp parallel for collapse(1) num_threads(4)
     for (int row = 0; row < dim; ++row) {
         for (int col = 0; col < dim; ++col) {
             if (row < rows && col < cols) {
@@ -50,22 +45,27 @@ std::vector<int> HungarianAlgorithmCPU::findOptimalAssignment(const std::vector<
             int nextCol = 0;
 
             // 未訪問の各列に対して、最小の調整済みコストを探す
+            // #pragma omp parallel for num_threads(2)
             for (int col = 1; col <= dim; ++col) {
                 if (!visited[col]) {
                     // 調整済みコストを計算
                     float currentCost = cost[currentRow - 1][col - 1] - potentialRow[currentRow] - potentialCol[col];
-                    if (currentCost < minValues[col]) {
-                        minValues[col] = currentCost; // 最小値を更新
-                        path[col] = freeCol;          // 経路を記録
-                    }
-                    if (minValues[col] < delta) {
-                        delta = minValues[col];       // deltaを更新
-                        nextCol = col;                // 次の列を設定
+                    // #pragma omp critical
+                    {
+                        if (currentCost < minValues[col]) {
+                            minValues[col] = currentCost; // 最小値を更新
+                            path[col] = freeCol;          // 経路を記録
+                        }
+                        if (minValues[col] < delta) {
+                            delta = minValues[col];       // deltaを更新
+                            nextCol = col;                // 次の列を設定
+                        }
                     }
                 }
             }
 
             // ポテンシャルを更新
+            // #pragma omp parallel for num_threads(2)
             for (int col = 0; col <= dim; ++col) {
                 if (visited[col]) {
                     potentialRow[matching[col]] += delta;
@@ -87,13 +87,14 @@ std::vector<int> HungarianAlgorithmCPU::findOptimalAssignment(const std::vector<
     }
 
     std::vector<int> assignment(rows, -1);
+    // #pragma omp parallel for num_threads(2)
     for (int col = 1; col <= dim; ++col) {
         if (matching[col] <= rows && col <= cols) {
             assignment[matching[col] - 1] = col - 1;
         }
     }
 
-    // 重複がないかチェック
+    // 重複がないかチェック（必要に応じて）
     if (checkForDuplicates(assignment)) {
         std::cerr << "Error: Assignment has duplicates." << std::endl;
     }
@@ -101,7 +102,7 @@ std::vector<int> HungarianAlgorithmCPU::findOptimalAssignment(const std::vector<
     return assignment;
 }
 
-bool HungarianAlgorithmCPU::checkForDuplicates(const std::vector<int>& assignment) {
+bool HungarianAlgorithmPARA::checkForDuplicates(const std::vector<int>& assignment) {
     std::set<int> assignedJobs;
     for (int job : assignment) {
         if (job != -1) {
@@ -114,7 +115,7 @@ bool HungarianAlgorithmCPU::checkForDuplicates(const std::vector<int>& assignmen
     return false;  // 重複なし
 }
 
-float HungarianAlgorithmCPU::calculateCost(const std::vector<int>& assignment, const std::vector<std::vector<float>>& costMatrix) {
+float HungarianAlgorithmPARA::calculateCost(const std::vector<int>& assignment, const std::vector<std::vector<float>>& costMatrix) {
     float totalCost = 0.0f;
     int rows = costMatrix.size();
 
@@ -129,6 +130,7 @@ float HungarianAlgorithmCPU::calculateCost(const std::vector<int>& assignment, c
         return 0.0f;
     }
 
+    // #pragma omp parallel for reduction(+:totalCost)
     for (int i = 0; i < assignment.size(); ++i) {
         if (assignment[i] != -1) {
             if (i >= rows) {

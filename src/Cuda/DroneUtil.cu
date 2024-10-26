@@ -47,7 +47,6 @@ double DroneUtil::initializeModels(int seed) {
     droneCount = std::max(modelA.size(), modelB.size());
 
     double elapsedMillTime = optimizeVertexMapping();
-
     float totalDistance = evaluateMapping();
     std::cout << "総移動距離: " << totalDistance << std::endl;
     return elapsedMillTime;
@@ -70,11 +69,6 @@ double DroneUtil::optimizeVertexMapping() {
     auto start = std::chrono::high_resolution_clock::now();
     
     if (algorithmType == AlgorithmType::HUNGARIAN) {
-        HungarianAlgorithm hungarianAlgorithmInstance;
-
-        // ダミー要素を追加
-        hungarianAlgorithmInstance.addDummyElements(costMatrix.data(), vertexCountA, vertexCountB, newSize);
-
         std::vector<std::vector<float>> costMatrix2D(newSize, std::vector<float>(newSize, FLT_MAX));
         for (int i = 0; i < vertexCountA; ++i) {
             for (int j = 0; j < vertexCountB; ++j) {
@@ -82,6 +76,7 @@ double DroneUtil::optimizeVertexMapping() {
             }
         }
 
+        HungarianAlgorithmPARA hungarianAlgorithmInstance;
         std::vector<int> assignments = hungarianAlgorithmInstance.findOptimalAssignment(costMatrix2D);
 
         for (int i = 0; i < vertexCountA; ++i) {
@@ -91,7 +86,6 @@ double DroneUtil::optimizeVertexMapping() {
         for (int i = vertexCountA; i < droneCount; ++i) {
             vertexMapping[i] = i % vertexCountB;
         }
-
     } else if (algorithmType == AlgorithmType::GA) {
         std::vector<std::vector<float>> costMatrix2D(newSize, std::vector<float>(newSize, FLT_MAX));
         for (int i = 0; i < vertexCountA; ++i) {
@@ -101,7 +95,11 @@ double DroneUtil::optimizeVertexMapping() {
         }
 
         // 遺伝的アルゴリズムによる最適化
-        GeneticAlgorithm ga(10 * newSize, 500, 0.15, newSize, costMatrix2D);
+        GeneticAlgorithm ga(5 * newSize, 2000, 0.15, newSize, costMatrix2D);
+        vertexMapping = ga.optimize();
+    } else if (algorithmType == AlgorithmType::GA_PARA) {
+        // 遺伝的アルゴリズムによる最適化
+        GeneticAlgorithmPARA ga(10 * newSize, 2000, 0.15, newSize, costMatrix);
         vertexMapping = ga.optimize();
     } else if (algorithmType == AlgorithmType::HUNGARIAN_CPU) {
         std::vector<std::vector<float>> costMatrix2D(newSize, std::vector<float>(newSize, FLT_MAX));
@@ -149,4 +147,30 @@ const Vec3& DroneUtil::getModelB(int index) const {
 // 頂点対応付け結果の取得
 const std::vector<int>& DroneUtil::getVertexMapping() const {
     return vertexMapping;
+}
+
+bool DroneUtil::checkForDuplicateMappings() {
+    std::unordered_set<int> uniqueMappings;
+    int skipCount = 0; // スキップした回数をカウントするための変数
+
+    for (int i = 0; i < vertexMapping.size(); ++i) {
+        int mappedVertex = vertexMapping[i];
+
+        // mappedVertexが-1の場合はスキップし、カウントを増やす
+        if (mappedVertex == -1) {
+            skipCount++;
+            continue;
+        }
+
+        if (uniqueMappings.find(mappedVertex) != uniqueMappings.end()) {
+            std::cout << "Duplicate mapping found for A[" << i << "] -> B[" << mappedVertex << "]" << std::endl;
+            std::cout << "Skipped -1 values: " << skipCount << std::endl; // スキップした回数を出力
+            return false; // 重複が見つかった場合、falseを返す
+        }
+        uniqueMappings.insert(mappedVertex);
+    }
+
+    std::cout << "No duplicate mappings found." << std::endl;
+    std::cout << "Skipped -1 values: " << skipCount << std::endl; // スキップした回数を出力
+    return true; // 重複がなければtrueを返す
 }

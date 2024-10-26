@@ -3,11 +3,13 @@
 
 #include <vector>
 #include <cmath>
+#include <cfloat>
 #include <chrono> 
 #include <algorithm>
 #include <cuda_runtime.h>
-#include "hungarian_algorithm.h"
+#include "GeneticAlgorithmPARA.h"
 #include "../Util/hungarian_algorithm_cpu.h"
+#include "../Util/hungarian_algorithm_para.h"
 #include "../Util/GeneticAlgorithm.h"
 
 struct Vec3 {
@@ -23,7 +25,7 @@ struct Vec3 {
 
 class DroneUtil {
 public:
-    enum class AlgorithmType { HUNGARIAN, GA, HUNGARIAN_CPU };
+    enum class AlgorithmType { HUNGARIAN, GA, HUNGARIAN_CPU, GA_PARA};
     DroneUtil(int vertexCountA, int vertexCountB, float radius, AlgorithmType algorithmType = AlgorithmType::HUNGARIAN);
     
     // モデルの初期化
@@ -42,6 +44,8 @@ public:
 
     // 頂点リストと対応付け結果を取得
     const std::vector<int>& getVertexMapping() const;
+
+    bool checkForDuplicateMappings();
 
 private:
     AlgorithmType algorithmType;
