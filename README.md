@@ -25,10 +25,12 @@ Hungarian Algorithmは最適解が求まる
 パラメータの最適化はまだ未検証
 
 ## 結果
-貪欲法
+頂点数:2000
+貪欲法(総移動距離: 4929.29)
 ![greedy](https://github.com/user-attachments/assets/85c41be8-d17b-4659-b130-b0f6d8ed19db)
-Hungarian Algorithm(まだ0マッチングの実装がいけない)
-![hungarian](https://github.com/user-attachments/assets/1a103d6a-48fe-44ab-98ef-c664d8bcd0f8)
+Hungarian Algorithm(総移動距離: 2472.41)
+![hungarian (1)](https://github.com/user-attachments/assets/be7f5667-deb4-4444-be73-ee1960d546d1)
+
 
 ## 実行
 環境はLinuxを想定  
