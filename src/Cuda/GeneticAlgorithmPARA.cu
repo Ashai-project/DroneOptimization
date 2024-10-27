@@ -45,7 +45,7 @@ __global__ void tournament_selection_kernel(int* population, float* fitness, int
 }
 
 // CUDAカーネル: 部分写像交叉（PMX）
-__global__ void pmx_crossover_kernel(int* population, int* selected_parents, int* new_population,
+__global__ void pmx_crossover_kernel(int* population, int* selected_parents, int* new_population, int* matching,
                                      int population_size, int n, curandState* rand_states) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -66,15 +66,17 @@ __global__ void pmx_crossover_kernel(int* population, int* selected_parents, int
         int* child = &new_population[idx * n];
         int* parent1 = &population[parent1_idx * n];
         int* parent2 = &population[parent2_idx * n];
+        int* used = &matching[idx * n];
 
         // 子個体の初期化
         for (int i = 0; i < n; ++i) {
-            child[i] = -1;
+            used[i] = -1;
         }
 
         // 親1から部分コピー
         for (int i = start; i <= end; ++i) {
             child[i] = parent1[i];
+            used[child[i]] = parent2[i];
         }
 
         // マッピングの確立と残りの遺伝子の埋め込み
@@ -85,19 +87,8 @@ __global__ void pmx_crossover_kernel(int* population, int* selected_parents, int
 
             int val = parent2[i];
 
-            // マッピングを使用して遺伝子を決定
-            while (true) {
-                bool found = false;
-                for (int j = start; j <= end; ++j) {
-                    if (val == child[j]) {
-                        val = parent2[j];
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    break;
-                }
+            while (used[val] != -1) {
+                val = used[val];
             }
 
             child[i] = val;
@@ -333,7 +324,7 @@ GeneticAlgorithmPARA::Individual GeneticAlgorithmPARA::optimize() {
     float* d_cost_matrix;
     curandState* d_rand_states;
     int* d_child;
-    bool* d_used;
+    int* d_used;
 
     cudaMalloc(&d_population, population_size * n * sizeof(int));
     cudaMalloc(&d_new_population, population_size * n * sizeof(int));
@@ -342,7 +333,7 @@ GeneticAlgorithmPARA::Individual GeneticAlgorithmPARA::optimize() {
     cudaMalloc(&d_cost_matrix, n * n * sizeof(float));
     cudaMalloc(&d_rand_states, population_size * sizeof(curandState));
     cudaMalloc(&d_child, population_size * n * sizeof(int));
-    cudaMalloc(&d_used, population_size * n * sizeof(bool));
+    cudaMalloc(&d_used, population_size * n * sizeof(int));
 
     // ホストからデバイスへデータ転送
     cudaMemcpy(d_cost_matrix, cost_matrix.data(), n * n * sizeof(float), cudaMemcpyHostToDevice);
@@ -361,7 +352,7 @@ GeneticAlgorithmPARA::Individual GeneticAlgorithmPARA::optimize() {
         tournament_selection_kernel<<<blocks, threads_per_block>>>(d_population, d_fitness, d_selected_parents, population_size, n, 7, d_rand_states);
 
         // 交叉の並列化
-        pmx_crossover_kernel<<<blocks , threads_per_block>>>(d_population, d_selected_parents, d_new_population, population_size, n, d_rand_states);
+        pmx_crossover_kernel<<<blocks , threads_per_block>>>(d_population, d_selected_parents, d_new_population, d_used, population_size, n, d_rand_states);
 
         // 突然変異の並列化
         mutate_kernel<<<blocks, threads_per_block>>>(d_new_population, population_size, n, d_rand_states);
