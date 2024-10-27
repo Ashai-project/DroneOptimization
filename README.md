@@ -15,7 +15,7 @@
 全体の計算量 : $O(N^3)$  
 一部並列化可能なループが存在するが、GPU並列化とスレッド並列化、どちらの場合も並列化可能部分の処理負荷が大きくないため、並列化のオーバヘッドが並列化による計算時間短縮を大きく上回ってしまった  
 Hungarian Algorithmはシングルスレッドでの実装となっている  
-むしろ、要素数が多い場合には最適解を諦め、部分問題に分割することで計算時間を短縮することが望ましいと考える(これはそのうち実装する)
+むしろ、要素数が多い場合には最適解を諦め、部分問題に分割することで計算時間を短縮することが望ましいと考える(これはそのうち実装する)  
 Hungarian Algorithmは最適解が求まる  
 
 ### Genetic Algorithm
@@ -31,6 +31,15 @@ Hungarian Algorithmは最適解が求まる
 Hungarian Algorithm(総移動距離: 2472.41)
 ![hungarian (1)](https://github.com/user-attachments/assets/be7f5667-deb4-4444-be73-ee1960d546d1)
 
+## 高速化
+GAのGPU実装の高速化を試みた
+Nsightでプロファイル結果は下の通り  
+改善前:
+![Screenshot from 2024-10-27 18-08-39](https://github.com/user-attachments/assets/ba282a32-8626-43de-9dc5-4f6cb75d5971)
+改善後:
+![Screenshot from 2024-10-27 18-12-54](https://github.com/user-attachments/assets/366f0dab-479a-4c00-afc2-97dac86f1adb)
+カーネル実行時間の99.4%を占めていたPMXの交叉が87.1%まで低下した  
+しかし依然交叉関数がボトルネックであることに変わりないため、今後より高速な交叉アルゴリズムの導入を検討する
 
 ## 実行
 環境はLinuxを想定  
