@@ -30,6 +30,9 @@ Hungarian Algorithmは最適解が求まる
 ![greedy](https://github.com/user-attachments/assets/85c41be8-d17b-4659-b130-b0f6d8ed19db)
 Hungarian Algorithm(総移動距離: 2472.41)
 ![hungarian (1)](https://github.com/user-attachments/assets/be7f5667-deb4-4444-be73-ee1960d546d1)
+点スプライトによる描画
+![Screencast-from-2024-10-28-01-54-13 (1)](https://github.com/user-attachments/assets/d9f431ca-fa07-4143-8f37-bb6cd2b96573)
+
 
 ## 高速化
 GAのGPU実装の高速化を試みた
@@ -65,6 +68,10 @@ cd ../bin
 2000頂点のハンガリアンによるマッチング最適化と描画
 ```
 ./DroneOptHungarian
+```
+点スプライトによるドローン描画
+```
+./DroneOptPointSprite
 ```
 実装速度計測  
 任意の頂点数で最適化にかかる時間を計測  
