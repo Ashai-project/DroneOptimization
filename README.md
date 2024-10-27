@@ -48,5 +48,23 @@ make
 実行
 ```
 cd ../bin
-./DroneOptimization
 ```
+2000頂点の貪欲法によるマッチングと描画
+```
+./DroneOptSample
+```
+2000頂点のハンガリアンによるマッチング最適化と描画
+```
+./DroneOptHungarian
+```
+実装速度計測  
+任意の頂点数で最適化にかかる時間を計測  
+コード内のtestCountを変更すればテストの実行回数を変更し、平均実行時間を計測できる
+```
+./{$Type}_speed_test
+```
+{$Type}説明  
+GA:遺伝的アルゴリズム(GA)のcpu実装、交叉はPMX  
+GA_PARA:GAのGPU実装、交叉はPMX  
+hungarian_cpu:ハンガリアンのシングルスレッド実装  
+hungarian_PARA:マルチスレッド実装であるが、並列化のオーバーヘッドが大きすぎるため、ほとんどの並列化を無効にしてある
